@@ -128,10 +128,11 @@ module.exports =
 
   TTYBuffer: class TTYBuffer
     constructor: (@width, @height) ->
-      @buffer = []
+      @buffer = [[]]
       @escaped = false
       @escapeArgs = []
       @escapeArgBuf = ''
+      @cursor = [0, 0] # x = x; y = @buffer.length - y
 
       @colors = [
         # Normal intensity
@@ -427,8 +428,11 @@ module.exports =
           when b is 0x3b # ;
             @escapeArgs.push parseInt @escapeArgBuf
             @escapeArgs = ''
+          when b >= 30 and b <= 39 then @escapeArgBuf += String.fromCharCode b
           when b is 0x6d # m
             @pushByte 0x3b # simulate semicolon
+            @escaped = false
+
             for m in @escapeArgs
               # switch color mode
               switch
@@ -505,6 +509,36 @@ module.exports =
                 when m >= 100 && m <= 107
                   @displayMode.bgColor = @colors[m - 100]
                   @displayMode.bgBright = 1
+          when b is 0x41 # A
+            @escaped = false
+            @cursor[1] -= if @escapeArgs[0]? then @escapeArgs[0] else 1
+            @cursor[1] = Math.max -@buffer.length, @cursor[1] + 1
+          when b is 0x42 # B
+            @escaped = false
+            @cursor[1] += if @escapeArgs[0]? then @escapeArgs[0] else 1
+            @cursor[1] = Math.min @cursor[1], 0
+          when b is 0x43 # C
+            @escaped = false
+            @cursor[0] += if @escapeArgs[0]? then @escapeArgs[0] else 1
+            @cursor[0] = Math.min @cursor[0], @width - 1
+          when b is 0x44 # D
+            @escaped = false
+            @cursor[0] -= if @escapeArgs[0]? then @escapeArgs[0] else 1
+            @cursor[0] = Math.max @cursor[0], 0
+          when b is 0x45 # E
+            @escaped = false
+            @cursor[0] = 0
+            @cursor[1] += if @escapeArgs[0]? then @escapeArgs[0] else 1
+            @cursor[1] = Math.min @cursor[1], 0
+          when b is 0x46 # F
+            @escaped = false
+            @cursor[0] = 0
+            @cursor[1] -= if @escapeArgs[0]? then @escapeArgs[0] else 1
+            @cursor[1] = Math.max -@buffer.length, @cursor[1] + 1
+          when b is 0x47 # G
+            @escaped = false
+            @cursor[0] = Math.min @width, @escapeArgs[0]
+          # TODO finish up codes
       else
         switch
           when b is 0x1b then @escaped = true # ESC

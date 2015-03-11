@@ -543,6 +543,7 @@ module.exports =
         switch
           when b is 0x1b then @escaped = true # ESC
           when b is 0x00 then @pushCharcters '^@'
+          # TODO finish up pseudo characters
           else @pushCharacterByte b
 
     pushCharacterByte: (b) ->
@@ -550,3 +551,8 @@ module.exports =
 
     pushCharacters: (chrs) ->
       # XXX TODO
+
+    newLine: ->
+      @buffer.push []
+      @buffer = buffer.slice 1 if buffer.length is @height
+      @cursor[0, 0]

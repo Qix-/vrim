@@ -1,150 +1,187 @@
 <!DOCTYPE html>
 
 <html lang="en">
-	<head>
-		<title>Basic Three.js VR boilerplate</title>
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-		<style>
-			body {
-				background-color: #000;
-				color: #fff;
-				margin: 0px;
-				padding: 0;
-				overflow: hidden;
-			}
-		</style>
-	</head>
+  <head>
+    <title>Basic Three.js VR boilerplate</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <style>
+      body {
+        background-color: #000;
+        color: #fff;
+        margin: 0px;
+        padding: 0;
+        overflow: hidden;
+      }
+    </style>
+  </head>
 
-	<body>
+  <body>
 
-	</body>
+  </body>
 
-	<!--
-	three.js 3d library
-	-->
-	<script src="js/three.min.js"></script>
+  <!--
+  three.js 3d library
+  -->
+  <script src="js/three.min.js"></script>
 
-	<!--
-	VRControls.js acquires positional information from connected VR devices and applies the transformations to a three.js camera object.
-	 -->
-	<script src="js/VRControls.js"></script>
+  <!--
+  VRControls.js acquires positional information from connected VR devices and applies the transformations to a three.js camera object.
+   -->
+  <script src="js/VRControls.js"></script>
 
-	<!--
-	VREffect.js handles stereo camera setup and rendering.
-	-->
-	<script src="js/VREffect.js"></script>
+  <!--
+  VREffect.js handles stereo camera setup and rendering.
+  -->
+  <script src="js/VREffect.js"></script>
 
-	<script>
-		/*
-		Setup three.js WebGL renderer
-		*/
-		var renderer = new THREE.WebGLRenderer( { antialias: true } );
+  <!--
+  socket.io.js handles the websocket connection to the local VRiM server
+  -->
+  <script src="js/socket.io.js"></script>
 
-		/*
-		Append the canvas element created by the renderer to document body element.
-		*/
-		document.body.appendChild( renderer.domElement );
+  <script>
+    /*
+    Connect to the VRiM server
+    */
+    var vrimSocket = io('http://localhost:9999');
 
-		/*
-		Create a three.js scene
-		*/
-		var scene = new THREE.Scene();
+    /*
+    Attach listeners
+    */
+    function clonePrimitive(original) {
+      var result = {};
+      for (var k in original) {
+        result[k] = typeof original[k] === 'object'
+          ? {}
+          : original[k];
+      }
 
-		/*
-		Create a three.js camera
-		*/
-		var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 10000 );
+      return result;
+    }
 
-		/*
-		Apply VR headset positional data to camera.
-		*/
-		var controls = new THREE.VRControls( camera );
+    document.addEventListener('keydown', function(e) {
+      vrimSocket.emit('keydown', clonePrimitive(e));
+    });
 
-		/*
-		Apply VR stereo rendering to renderer
-		*/
-		var effect = new THREE.VREffect( renderer );
-		effect.setSize( window.innerWidth, window.innerHeight );
+    document.addEventListener('keyup', function(e) {
+      vrimSocket.emit('keyup', clonePrimitive(e));
+    });
 
-		/*
-		Create 3d objects
-		*/
-		var geometry = new THREE.BoxGeometry( 10, 10, 10 );
+    vrimSocket.on('data', function(data) {
+      // XXX
+      console.log(data);
+    });
 
-		var material = new THREE.MeshNormalMaterial();
+    /*
+    Setup three.js WebGL renderer
+    */
+    var renderer = new THREE.WebGLRenderer( { antialias: true } );
 
-		var cube = new THREE.Mesh( geometry, material );
+    /*
+    Append the canvas element created by the renderer to document body element.
+    */
+    document.body.appendChild( renderer.domElement );
 
-		/*
-		Position cube mesh
-		*/
-		cube.position.z = -20;
+    /*
+    Create a three.js scene
+    */
+    var scene = new THREE.Scene();
 
-		/*
-		Add cube mesh to your three.js scene
-		*/
-		scene.add( cube );
+    /*
+    Create a three.js camera
+    */
+    var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 10000 );
 
-		/*
-		Request animation frame loop function
-		*/
-		function animate() {
-			/*
-			Apply rotation to cube mesh
-			*/
-			cube.rotation.y += 0.01;
+    /*
+    Apply VR headset positional data to camera.
+    */
+    var controls = new THREE.VRControls( camera );
 
-			/*
-			Update VR headset position and apply to camera.
-			*/
-			controls.update();
+    /*
+    Apply VR stereo rendering to renderer
+    */
+    var effect = new THREE.VREffect( renderer );
+    effect.setSize( window.innerWidth, window.innerHeight );
 
-			/*
-			Render the scene through the VREffect.
-			*/
-			effect.render( scene, camera );
+    /*
+    Create 3d objects
+    */
+    var geometry = new THREE.BoxGeometry( 10, 10, 10 );
 
-			requestAnimationFrame( animate );
-		}
+    var material = new THREE.MeshNormalMaterial();
 
-		/*
-		Kick off animation loop
-		*/
-		animate();
+    var cube = new THREE.Mesh( geometry, material );
 
-		/*
-		Listen for double click event to enter full-screen VR mode
-		*/
-		document.body.addEventListener( 'dblclick', function() {
-			effect.setFullScreen( true );
-		});
+    /*
+    Position cube mesh
+    */
+    cube.position.z = -20;
 
-		/*
-		Listen for keyboard event and zero positional sensor on appropriate keypress.
-		*/
-		function onkey(event) {
-	    event.preventDefault();
+    /*
+    Add cube mesh to your three.js scene
+    */
+    scene.add( cube );
 
-	    if (event.keyCode == 90) { // z
-	    	controls.zeroSensor();
-	    }
-	  };
+    /*
+    Request animation frame loop function
+    */
+    function animate() {
+      /*
+      Apply rotation to cube mesh
+      */
+      cube.rotation.y += 0.01;
 
-	  window.addEventListener("keydown", onkey, true);
+      /*
+      Update VR headset position and apply to camera.
+      */
+      controls.update();
+
+      /*
+      Render the scene through the VREffect.
+      */
+      effect.render( scene, camera );
+
+      requestAnimationFrame( animate );
+    }
+
+    /*
+    Kick off animation loop
+    */
+    animate();
+
+    /*
+    Listen for double click event to enter full-screen VR mode
+    */
+    document.body.addEventListener( 'dblclick', function() {
+      effect.setFullScreen( true );
+    });
+
+    /*
+    Listen for keyboard event and zero positional sensor on appropriate keypress.
+    */
+    function onkey(event) {
+      event.preventDefault();
+
+      if (event.keyCode == 90) { // z
+        controls.zeroSensor();
+      }
+    };
+
+    window.addEventListener("keydown", onkey, true);
 
 
-		/*
-		Handle window resizes
-		*/
-		function onWindowResize() {
-			camera.aspect = window.innerWidth / window.innerHeight;
-			camera.updateProjectionMatrix();
+    /*
+    Handle window resizes
+    */
+    function onWindowResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
 
-			effect.setSize( window.innerWidth, window.innerHeight );
-		}
+      effect.setSize( window.innerWidth, window.innerHeight );
+    }
 
-		window.addEventListener( 'resize', onWindowResize, false );
+    window.addEventListener( 'resize', onWindowResize, false );
 
-	</script>
+  </script>
 </html>

@@ -1,6 +1,7 @@
 SRC:=\
 	src/vrim.coffee \
-	src/server.coffee
+	src/server.coffee \
+	tty.coffee
 JS=$(addprefix bin/,$(notdir $(SRC:.coffee=.js)))
 
 all : bin-dir $(JS)

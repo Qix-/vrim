@@ -112,15 +112,15 @@ module.exports =
       # when shift and ctrl then 3 # TODO this is relevant! Needs to be added.
       else 0
 
-    if not keyMap[e.keyCode]?
+    codePoint = keyMap[e.keyCode]
+    if not codePoint? or codePoint[modifier] is null
       console.warn "unknown character code <#{e.keyCode.toString(16)}/#{e.keyCode.toString(10)}> (#{e.key})"
       new Buffer 0
     else
-      code = keyMap[e.keyCode][modifier]
+      code = codePoint[modifier]
       if code instanceof String
         buffer = new Buffer code
       else
         buffer = new Buffer 1
         buffer.writeUInt8 code, 0
-      console.log(buffer)
       buffer

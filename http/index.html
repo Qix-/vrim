@@ -49,23 +49,13 @@
     /*
     Attach listeners
     */
-    function clonePrimitive(original) {
-      var result = {};
-      for (var k in original) {
-        result[k] = typeof original[k] === 'object'
-          ? {}
-          : original[k];
-      }
-
-      return result;
-    }
-
     document.addEventListener('keydown', function(e) {
-      vrimSocket.emit('keydown', clonePrimitive(e));
-    });
-
-    document.addEventListener('keyup', function(e) {
-      vrimSocket.emit('keyup', clonePrimitive(e));
+      var data = {
+        keyCode: e.keyCode,
+        shiftKey: e.shiftKey,
+        ctrlKey: e.ctrlKey
+      };
+      vrimSocket.emit('keydown', data);
     });
 
     vrimSocket.on('data', function(data) {

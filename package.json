@@ -1,0 +1,11 @@
+{
+  "name": "vrim",
+  "description": "OculusVR TTY sessions!",
+  "author": "JD Ballard (http://github.com/qix-)",
+  "version": "0.1.0",
+  "bin": "node bin/vrim.js",
+  "dependencies": {
+    "pty": "0.0.0",
+    "socket.io": "^1.3.5"
+  }
+}

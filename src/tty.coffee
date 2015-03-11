@@ -550,9 +550,23 @@ module.exports =
       @pushCharacters String.fromCharCode b
 
     pushCharacters: (chrs) ->
-      # XXX TODO
+      if not (chrs instanceof String) then chrs = String.fromKeyCode chrs
+      if chrs in ['\r', '\n']
+        @newLine()
+      else
+        @buffer[@cursor[1]][@cursor[0]] = [chrs, @cloneDisplayMode()]
+        @nextCharacter()
+
+    nextCharacter: ->
+      ++@cursor[0]
+      if @cursor[0] is @width then @newLine()
+
+    cloneDisplayMode: ->
+      o = {}
+      o[k] = v for k,v of obj
+      o
 
     newLine: ->
       @buffer.push []
       @buffer = buffer.slice 1 if buffer.length is @height
-      @cursor[0, 0]
+      @cursor = [0, 0]
